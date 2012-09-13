@@ -1,11 +1,12 @@
 #!/bin/sh
 
-IOS_VERSION=5.0
-DEVICE_PLATFORM="/Developer/Platforms/iPhoneOS.platform"
-SIMULATOR_PLATFORM="/Developer/Platforms/iPhoneSimulator.platform"
-DEVICE_SDK="${DEVICE_PLATFORM}/Developer/SDKs/iPhoneOS${IOS_VERSION}.sdk"
-SIMULATOR_SDK="${SIMULATOR_PLATFORM}/Developer/SDKs/iPhoneSimulator${IOS_VERSION}.sdk"
+DEVELOPER="/Applications/Xcode.app/Contents/Developer"
+SDK_VERSION="6.0"
 
+DEVICE_PLATFORM="${DEVELOPER}/Platforms/iPhoneOS.platform"
+SIMULATOR_PLATFORM="${DEVELOPER}/Platforms/iPhoneSimulator.platform"
+DEVICE_SDK="${DEVICE_PLATFORM}/Developer/SDKs/iPhoneOS${SDK_VERSION}.sdk"
+SIMULATOR_SDK="${SIMULATOR_PLATFORM}/Developer/SDKs/iPhoneSimulator${SDK_VERSION}.sdk"
 IOS_OPENSSL=`cd ../ios-openssl;pwd`
 
 rm -rf include lib
@@ -22,68 +23,47 @@ else
 	popd
 fi
 
-# armv6
-cp -r rtmpdump rtmpdump-armv6
+# build
 
-pushd .
-cd rtmpdump-armv6/librtmp
+build()
+{
+	ARCH=$1
+	PLATFORM=$2
+	SDK=$3
+	
+	cp -r rtmpdump "rtmpdump-$ARCH"
 
-patch -u hashswf.c < ../../hashswf-ios.patch
+	pushd .
 
-CROSS_COMPILE="${DEVICE_PLATFORM}/Developer/usr/bin/" \
-XCFLAGS="-isysroot ${DEVICE_SDK} -I${IOS_OPENSSL}/include -arch armv6" \
-XLDFLAGS="-isysroot ${DEVICE_SDK} -L${IOS_OPENSSL}/lib -arch armv6 " \
-make SYS=darwin &> /tmp/librtmp-armv6.log
-make SYS=darwin prefix=/tmp/librtmp-armv6 install &> /tmp/librtmp-armv6.log
+	cd "rtmpdump-$ARCH/librtmp"
 
-popd
+	patch -u hashswf.c < ../../hashswf-ios.patch
 
-# armv7
-cp -r rtmpdump rtmpdump-armv7
+	CROSS_COMPILE="${PLATFORM}/Developer/usr/bin/" \
+	XCFLAGS="-isysroot ${SDK} -I${IOS_OPENSSL}/include -arch $ARCH " \
+    XLDFLAGS="-isysroot ${SDK} -L${IOS_OPENSSL}/lib -arch $ARCH " \
+    make SYS=darwin &> "/tmp/librtmp-$ARCH.log"
+    make SYS=darwin prefix="/tmp/librtmp-$ARCH" install &> "/tmp/librtmp-$ARCH.log"
 
-pushd .
-cd rtmpdump-armv7/librtmp
+	popd
+}
 
-patch -u hashswf.c < ../../hashswf-ios.patch
-
-CROSS_COMPILE="${DEVICE_PLATFORM}/Developer/usr/bin/" \
-XCFLAGS="-isysroot ${DEVICE_SDK} -I${IOS_OPENSSL}/include -arch armv7" \
-XLDFLAGS="-isysroot ${DEVICE_SDK} -L${IOS_OPENSSL}/lib -arch armv7" \
-make SYS=darwin &> /tmp/librtmp-armv7.log
-make SYS=darwin prefix=/tmp/librtmp-armv7 install &> /tmp/librtmp-armv7.log
-
-popd
-
-# i386
-cp -r rtmpdump rtmpdump-i386
-
-pushd .
-cd rtmpdump-i386/librtmp
-
-patch -u hashswf.c < ../../hashswf-ios.patch
-
-CROSS_COMPILE="${SIMULATOR_PLATFORM}/Developer/usr/bin/" \
-XCFLAGS="-isysroot ${SIMULATOR_SDK} -I${IOS_OPENSSL}/include -arch i386" \
-XLDFLAGS="-isysroot ${SIMULATOR_SDK} -L${IOS_OPENSSL}/lib -arch i386" \
-make SYS=darwin &> /tmp/librtmp-i386.log
-make SYS=darwin prefix=/tmp/librtmp-i386 install &> /tmp/librtmp-i386.log
-
-popd
+build "armv7" "$DEVICE_PLATFORM" "$DEVICE_SDK"
+build "armv7s" "$DEVICE_PLATFORM" "$DEVICE_SDK"
+build "i386" "$SIMULATOR_PLATFORM" "$SIMULATOR_SDK"
 
 # remove temporary dir
 rm -rf rtmpdump-*
 
-#
-
+# copy include files
 mkdir include
 cp -r /tmp/librtmp-i386/include/librtmp include/
 
 # create universal binary
 mkdir lib
 lipo \
-	/tmp/librtmp-armv6/lib/librtmp.a \
 	/tmp/librtmp-armv7/lib/librtmp.a \
+	/tmp/librtmp-armv7s/lib/librtmp.a \
 	/tmp/librtmp-i386/lib/librtmp.a \
-	-create -output lib/librtmp.a	
-	
+	-create -output lib/librtmp.a
 
