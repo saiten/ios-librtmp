@@ -1,0 +1,28 @@
+diff --git librtmp/hashswf.c librtmp/hashswf.c
+index 9f4e2c0..90daffa 100644
+--- librtmp/hashswf.c
++++ librtmp/hashswf.c
+@@ -480,7 +480,10 @@ RTMP_HashSWF(const char *url, unsigned int *size, unsigned char *hash,
+ #else /* !_WIN32 */
+   hpre.av_val = "";
+   hpre.av_len = 0;
+-  home.av_val = getenv("HOME");
++  char tmp_dir[1024];
++  strcpy(tmp_dir, getenv("HOME"));
++  strcat(tmp_dir, "/tmp");
++  home.av_val = tmp_dir;  
+ #define DIRSEP	"/"
+ #endif
+   if (!home.av_val)
+diff --git librtmp/rtmp.c librtmp/rtmp.c
+index 52d0254..a1af6d6 100644
+--- librtmp/rtmp.c
++++ librtmp/rtmp.c
+@@ -853,6 +853,7 @@ RTMP_Connect0(RTMP *r, struct sockaddr * service)
+       }
+   }
+ 
++  setsockopt(r->m_sb.sb_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *) &on, sizeof(on));
+   setsockopt(r->m_sb.sb_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on));
+ 
+   return TRUE;

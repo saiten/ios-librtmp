@@ -35,9 +35,11 @@ build()
 
 	pushd .
 
-	cd "rtmpdump-$ARCH/librtmp"
+	cd "rtmpdump-$ARCH"
 
-	patch -u hashswf.c < ../../hashswf-ios.patch
+	patch -p0 < ../librtmp-ios.patch
+
+    cd librtmp
 
 	CROSS_COMPILE="${PLATFORM}/Developer/usr/bin/" \
 	XCFLAGS="-isysroot ${SDK} -I${IOS_OPENSSL}/include -arch $ARCH " \
