@@ -42,7 +42,7 @@ build()
     cd librtmp
 
 	CROSS_COMPILE="${PLATFORM}/Developer/usr/bin/" \
-	XCFLAGS="-isysroot ${SDK} -I${IOS_OPENSSL}/include -arch $ARCH " \
+	XCFLAGS="-O0 -isysroot ${SDK} -I${IOS_OPENSSL}/include -arch $ARCH " \
     XLDFLAGS="-isysroot ${SDK} -L${IOS_OPENSSL}/lib -arch $ARCH " \
     make SYS=darwin &> "/tmp/librtmp-$ARCH.log"
     make SYS=darwin prefix="/tmp/librtmp-$ARCH" install &> "/tmp/librtmp-$ARCH.log"
