@@ -1,7 +1,8 @@
 #!/bin/sh
 
-DEVELOPER="/Applications/Xcode.app/Contents/Developer"
-SDK_VERSION="6.0"
+DEVELOPER=$(xcode-select --print-path)
+SDK_VERSION=$(xcrun -sdk iphoneos --show-sdk-version)
+SDK_VERSION_MIN=4.3
 
 DEVICE_PLATFORM="${DEVELOPER}/Platforms/iPhoneOS.platform"
 SIMULATOR_PLATFORM="${DEVELOPER}/Platforms/iPhoneSimulator.platform"
@@ -30,22 +31,24 @@ build()
 	ARCH=$1
 	PLATFORM=$2
 	SDK=$3
-	
+
 	cp -r rtmpdump "rtmpdump-$ARCH"
 
 	pushd .
 
 	cd "rtmpdump-$ARCH"
 
+	perl -i -pe 's|^AR=\$\(CROSS_COMPILE\)ar|AR=xcrun ar|' librtmp/Makefile
 	patch -p0 < ../librtmp-ios.patch
 
     cd librtmp
 
-	CROSS_COMPILE="${PLATFORM}/Developer/usr/bin/" \
+	CROSS_COMPILE="${DEVELOPER}/usr/bin/" \
 	XCFLAGS="-O0 -isysroot ${SDK} -I${IOS_OPENSSL}/include -arch $ARCH " \
-    XLDFLAGS="-isysroot ${SDK} -L${IOS_OPENSSL}/lib -arch $ARCH " \
-    make SYS=darwin &> "/tmp/librtmp-$ARCH.log"
-    make SYS=darwin prefix="/tmp/librtmp-$ARCH" install &> "/tmp/librtmp-$ARCH.log"
+	XLDFLAGS="-isysroot ${SDK} -L${IOS_OPENSSL}/lib -arch $ARCH -miphoneos-version-min=${SDK_VERSION_MIN} " \
+	make SYS=darwin
+
+	make SYS=darwin prefix="/tmp/librtmp-$ARCH" install &> "/tmp/librtmp-$ARCH.log"
 
 	popd
 }
@@ -63,7 +66,7 @@ cp -r /tmp/librtmp-i386/include/librtmp include/
 
 # create universal binary
 mkdir lib
-lipo \
+xcrun lipo \
 	/tmp/librtmp-armv7/lib/librtmp.a \
 	/tmp/librtmp-armv7s/lib/librtmp.a \
 	/tmp/librtmp-i386/lib/librtmp.a \
