@@ -44,7 +44,7 @@ build()
 	cd librtmp
 
 	CROSS_COMPILE="${DEVELOPER}/usr/bin/" \
-	XCFLAGS="-O0 -isysroot ${SDK} -I${IOS_OPENSSL}/include -arch $ARCH -miphoneos-version-min=${SDK_VERSION_MIN}" \
+	XCFLAGS="-O0 -isysroot ${SDK} -I${IOS_OPENSSL}/include -arch $ARCH -miphoneos-version-min=${SDK_VERSION_MIN} -fembed-bitcode" \
 	XLDFLAGS="-isysroot ${SDK} -L${IOS_OPENSSL}/lib -arch $ARCH -miphoneos-version-min=${SDK_VERSION_MIN} " \
 	make SYS=darwin
 
