@@ -2,7 +2,7 @@
 
 DEVELOPER=$(xcode-select --print-path)
 SDK_VERSION=$(xcrun -sdk iphoneos --show-sdk-version)
-SDK_VERSION_MIN=5.1
+SDK_VERSION_MIN=7.0
 
 DEVICE_PLATFORM="${DEVELOPER}/Platforms/iPhoneOS.platform"
 SIMULATOR_PLATFORM="${DEVELOPER}/Platforms/iPhoneSimulator.platform"
@@ -41,10 +41,10 @@ build()
 	perl -i -pe 's|^AR=\$\(CROSS_COMPILE\)ar|AR=xcrun ar|' librtmp/Makefile
 	patch -p0 < ../librtmp-ios.patch
 
-    cd librtmp
+	cd librtmp
 
 	CROSS_COMPILE="${DEVELOPER}/usr/bin/" \
-	XCFLAGS="-O0 -isysroot ${SDK} -I${IOS_OPENSSL}/include -arch $ARCH " \
+	XCFLAGS="-O0 -isysroot ${SDK} -I${IOS_OPENSSL}/include -arch $ARCH -miphoneos-version-min=${SDK_VERSION_MIN}" \
 	XLDFLAGS="-isysroot ${SDK} -L${IOS_OPENSSL}/lib -arch $ARCH -miphoneos-version-min=${SDK_VERSION_MIN} " \
 	make SYS=darwin
 
