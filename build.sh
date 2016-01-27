@@ -66,6 +66,9 @@ rm -rf rtmpdump-*
 mkdir include
 cp -r /tmp/librtmp-i386/include/librtmp include/
 
+# copy license
+cp rtmpdump/COPYING .
+
 # create universal binary
 mkdir lib
 xcrun lipo \
@@ -75,4 +78,5 @@ xcrun lipo \
 	/tmp/librtmp-i386/lib/librtmp.a \
 	/tmp/librtmp-x86_64/lib/librtmp.a \
 	-create -output lib/librtmp.a
+
 
