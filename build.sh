@@ -38,7 +38,8 @@ rm -rf /tmp/librtmp-*
 rm -f /tmp/librtmp-*.log
 
 if [ ! -d rtmpdump ]; then
-	git clone git://git.ffmpeg.org/rtmpdump rtmpdump
+	#git clone git://git.ffmpeg.org/rtmpdump rtmpdump
+	git clone -b ipv6_support https://github.com/saiten/rtmpdump.git
 else
 	pushd .
 	cd rtmpdump
@@ -61,12 +62,12 @@ build()
 	cd "rtmpdump-$ARCH"
 
 	perl -i -pe 's|^AR=\$\(CROSS_COMPILE\)ar|AR=xcrun ar|' librtmp/Makefile
-	patch -p0 < ../librtmp-ios.patch
+	#patch -p0 < ../librtmp-ios.patch
 
 	cd librtmp
 
 	CROSS_COMPILE="${DEVELOPER}/usr/bin/" \
-	XCFLAGS="-O0 -isysroot ${SDK} -I${IOS_OPENSSL}/include -arch $ARCH -miphoneos-version-min=${SDK_VERSION_MIN} -fembed-bitcode" \
+	XCFLAGS="-g -O2 -isysroot ${SDK} -I${IOS_OPENSSL}/include -arch $ARCH -miphoneos-version-min=${SDK_VERSION_MIN} -fembed-bitcode" \
 	XLDFLAGS="-isysroot ${SDK} -L${IOS_OPENSSL}/lib -arch $ARCH -miphoneos-version-min=${SDK_VERSION_MIN} " \
 	make SYS=darwin
 
